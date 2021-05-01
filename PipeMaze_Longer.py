@@ -2,61 +2,76 @@ import numpy as np
 import pprint
 import time
 
+height = 20
+length = 20
 
 def setUpQ(): # Sets up an empty Q-table with correct values for terminal states.
+    global height, length
     states = []
-    for y in range(10):
-        for x in range(10):
+    for y in range(height):
+        for x in range(length):
             states.append((x,y))
     actions = [0,1]
     Q = {s: {a: 0 for a in actions} for s in states}
     return Q
 
-def setUpPipe():
-    rewardGrid = np.zeros((10,10))
+def setUpOnePipe(rewardGrid, x, y):
+    global height, length
+    for i in range(height):
+        if (i != y) and (i != y+1) and (i != y+2):
+            rewardGrid[(height-1)-i][x] = -1
+            rewardGrid[(height-1)-i][x+1] = -1
+
+def setUpPipes():
+    global height, length
+    rewardGrid = np.zeros((height,length))
     Q = setUpQ()
 
-    for i in range(10):
-        if (i != 6) and (i != 4) and (i != 5):
-            rewardGrid[9-i][6] = -1
-            rewardGrid[9-i][7] = -1
-            # Q[(6,i)][0] = -1
-            # Q[(6,i)][1] = -1
-            # Q[(7,i)][0] = -1
-            # Q[(7,i)][1] = -1
-        rewardGrid[9-i][9] = 1
+    setUpOnePipe(rewardGrid, 6, 4)
+    setUpOnePipe(rewardGrid, 14, 8)
+    for i in range(height):
+        # if (i != 6) and (i != 4) and (i != 5):
+        #     rewardGrid[(height-1)-i][6] = -1
+        #     rewardGrid[(height-1)-i][7] = -1
+        #     # Q[(6,i)][0] = -1
+        #     # Q[(6,i)][1] = -1
+        #     # Q[(7,i)][0] = -1
+        #     # Q[(7,i)][1] = -1
+        rewardGrid[(height-1)-i][length-1] = 1
         # Q[(9,i)][0] = 1
         # Q[(9,i)][1] = 1
     return Q, rewardGrid
 
-Q, rewardGrid = setUpPipe()
+Q, rewardGrid = setUpPipes()
 print(rewardGrid)
 # pp.pprint(Q)
 
 def verifyState(x, y):
+    global height, length
     valid = True
-    if y > 9:
+    if y > height -1:
         valid = False
     if y < 0:
         valid = False
-    if x > 9:
+    if x > length - 1:
         valid = False
     return valid
 
 def findPossibleStates(state):
+    global height, length
     x, y = state
     states = []
     if verifyState(x+1, y-1):
         states.append((x+1, y-1))
     else:
-        if x < 10:
+        if x < length:
             states.append((x+1, y))
         else: 
             states.append((x,y))
     if verifyState(x+1, y+1):
         states.append((x+1, y+1))
     else:
-        if x < 10:
+        if x < length:
             states.append((x+1, y))
         else: 
             states.append((x,y))
@@ -92,10 +107,11 @@ def chooseMax(Q, state): # Chooses the action with the highest Q-table value
     return maxAction
 
 def qLearning(gamma, epsilon, alpha, n):
+    global length, height
     np.random.seed(int(time.time()))
     episodes = 0
 
-    Q, rewardGrid = setUpPipe()
+    Q, rewardGrid = setUpPipes()
     
     s = (0,0)
     x, y = s
@@ -108,7 +124,7 @@ def qLearning(gamma, epsilon, alpha, n):
         # print(s)
         sPrime = move(s,a)
         x1, y1 = sPrime
-        reward = rewardGrid[9-y1,x1] #is this right?
+        reward = rewardGrid[(height-1)-y1,x1] #is this right?
         # print(reward)
         
         
@@ -130,30 +146,29 @@ def qLearning(gamma, epsilon, alpha, n):
 
 gamma = 0.9
 epsilon = 0.7
-alpha = 0.01
-Q = qLearning(gamma, epsilon, alpha, 100000)
+alpha = 0.1
+Q = qLearning(gamma, epsilon, alpha, 1000000)
 pp = pprint.PrettyPrinter(width=41, compact=True)
 # pp.pprint(Q)
 
 
-for x in range(10):
+for x in range(length):
     print(x, "\t", end= "")
 print()
-for y in reversed(range(10)):
-    for x in range(10):
+for y in reversed(range(height)):
+    for x in range(length):
         maxVal = max(Q[(x,y)][0], Q[(x,y)][1])
         print(round(maxVal, 2), "\t", end= "")
     print()
 
 print("\n")
-for x in range(10):
+for x in range(length):
     print(x, "\t", end= "")
 print()
-for y in reversed(range(10)):
-    for x in range(10):
-        maxVal = max(Q[(x,y)][0], Q[(x,y)][0])
-        if rewardGrid[9-y][x] == -1 or rewardGrid[9-y][x] == 1:
-            print(rewardGrid[9-y][x], "\t", end= "")
+for y in reversed(range(height)):
+    for x in range(length):
+        if rewardGrid[(height-1)-y][x] == -1 or rewardGrid[(height-1)-y][x] == 1:
+            print(rewardGrid[(height-1)-y][x], "\t", end= "")
         elif (Q[(x,y)][0] < Q[(x,y)][1]):
             print("jump", "\t", end= "")
         else:
