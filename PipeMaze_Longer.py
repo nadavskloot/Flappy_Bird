@@ -124,14 +124,14 @@ def qLearning(gamma, epsilon, alpha, n):
         # print(s)
         sPrime = move(s,a)
         x1, y1 = sPrime
-        reward = rewardGrid[(height-1)-y1,x1] #is this right?
+        reward = rewardGrid[(height-1)-y1,x1]
         # print(reward)
         
         
         aPrime = chooseMax(Q, sPrime)
         Q[s][a] = Q[s][a] + (alpha * ((reward + gamma*Q[sPrime][aPrime]) - Q[s][a]))
 
-        if (reward == 1) or (reward == -1): # does not actually ever use the reward, nadav fiiiiix!!
+        if (reward == 1) or (reward == -1):
             s = (0,0)
             x, y = s
             a = chooseEpsilonGreedy(Q, s, epsilon)
